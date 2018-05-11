@@ -11,6 +11,18 @@
         stroke: #741b56;
         stroke-width: 2px;
     }
+   div.tooltip {
+  position: absolute;
+  text-align: center;
+  width: 90px;
+  padding: 10px;
+  font: 12px sans-serif;
+  background: lightsteelblue;
+  border: 0px;
+  border-radius: 8px;
+  pointer-events: none;
+}
+
 
 </style>
 <svg width="800" height="500"></svg>
@@ -47,7 +59,7 @@
             d.name = +d.name
         });
 
-
+        console.log(nodes_data)
         // filter links to have only those that appear in the list of stations
         var links_data_sorted = links_data.sort(function (a,b) {return a.type - b.type}).reverse()
         var links = links_data_sorted.filter(function(d,i){return i < 300});
@@ -55,7 +67,9 @@
 
 
         //create somewhere to put the force directed graph
-
+        var div = d3.select("body").append("div")
+        .attr("class", "tooltip")
+        .style("opacity", 0);
         var svg = d3.select("svg"),
             width = +svg.attr("width"),
             height = +svg.attr("height");
@@ -107,12 +121,23 @@
             .attr("r", function (d) {
                 return radius_scaled(d.type)
             })
-            .attr("fill", circleColour);
-
+            .attr("fill", circleColour)
+            .on("mouseover", function(d) {
+            div.transition()
+            .duration(200)
+            .style("opacity", .9);
+            div.html(d.id)
+            .style("left", (d3.event.pageX) + "px")
+            .style("top", (d3.event.pageY - 28) + "px");
+       })
+            .on("mouseout", function(d) {
+            div.transition()
+            .duration(500)
+            .style("opacity", 0);
+            })
 //    simulation
         simulation.nodes(nodes_data).on("tick", tickActions);
         simulation.force("link").links(links);
-
 
 //add drag capabilities
 
@@ -173,6 +198,7 @@
 
         function tickActions() {
             //update circle positions each tick of the simulation
+            /*
             node
                 .attr("cx", function (d) {
                     return d.x
@@ -180,6 +206,10 @@
                 .attr("cy", function (d) {
                     return d.y;
                 });
+                */
+            node
+            .attr("cx", function(d) { return d.x = Math.max(radius, Math.min(width - radius, d.x)); })
+            .attr("cy", function(d) { return d.y = Math.max(radius, Math.min(height - radius, d.y)); });
 
             //update link positions
             link
@@ -197,5 +227,5 @@
                     return d.target.y
                 });
         }
-    }
+            }
 </script>
